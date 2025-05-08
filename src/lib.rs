@@ -4,7 +4,7 @@ pub mod time;
 use crate::time::FormatTime;
 use format::{write_span_mode, Buffers, ColorLevel, Config, FmtEvent, SpanMode};
 
-use nu_ansi_term::{Color, Style};
+use nu_ansi_term::Style;
 use std::{
     fmt::{self, Write},
     io::{self, IsTerminal},
@@ -349,27 +349,76 @@ where
         };
 
         if should_write {
+            // added level
+            let level = span.metadata().level();
+            let level = if self.config.ansi {
+                ColorLevel(level).to_string()
+            } else {
+                level.to_string()
+            };
+            write!(current_buf, "{level} ", level = level).expect("Unable to write to buffer");
+
+            // if self.config.targets {
+            //     let target = span.metadata().target();
+            //     write!(
+            //         &mut current_buf,
+            //         "{}::",
+            //         self.styled(Style::new().dimmed(), target,),
+            //     )
+            //     .expect("Unable to write to buffer");
+            // }
+
             if self.config.targets {
                 let target = span.metadata().target();
                 write!(
                     &mut current_buf,
-                    "{}::",
+                    "{} ", // added space here
                     self.styled(Style::new().dimmed(), target,),
                 )
                 .expect("Unable to write to buffer");
             }
 
+            // write!(
+            //     current_buf,
+            //     "{name}",
+            //     name = self.styled(Style::new().fg(Color::Green).bold(), span.metadata().name())
+            // )
+            // .unwrap();
+
+            // if self.config.bracketed_fields {
+            //     write!(
+            //         current_buf,
+            //         "{}",
+            //         self.styled(Style::new().fg(Color::Green).bold(), "{") // Style::new().fg(Color::Green).dimmed().paint("{")
+            //     )
+            //     .unwrap();
+            // } else {
+            //     write!(current_buf, " ").unwrap();
+            // }
+            // self.print_kvs(&mut current_buf, data.kvs.iter().map(|(k, v)| (*k, v)))
+            //     .unwrap();
+            // if self.config.bracketed_fields {
+            //     write!(
+            //         current_buf,
+            //         "{}",
+            //         self.styled(Style::new().fg(Color::Green).bold(), "}") // Style::new().dimmed().paint("}")
+            //     )
+            //     .unwrap();
+            // }
+
+            // made all of these dimmed and removed green colour
             write!(
                 current_buf,
                 "{name}",
-                name = self.styled(Style::new().fg(Color::Green).bold(), span.metadata().name())
+                name = self.styled(Style::new().bold(), span.metadata().name())
             )
             .unwrap();
+
             if self.config.bracketed_fields {
                 write!(
                     current_buf,
                     "{}",
-                    self.styled(Style::new().fg(Color::Green).bold(), "{") // Style::new().fg(Color::Green).dimmed().paint("{")
+                    self.styled(Style::new().bold(), "{") // Style::new().dimmed().paint("{")
                 )
                 .unwrap();
             } else {
@@ -381,7 +430,7 @@ where
                 write!(
                     current_buf,
                     "{}",
-                    self.styled(Style::new().fg(Color::Green).bold(), "}") // Style::new().dimmed().paint("}")
+                    self.styled(Style::new().bold(), "}") // Style::new().dimmed().paint("}")
                 )
                 .unwrap();
             }
